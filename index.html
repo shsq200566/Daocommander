@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>道禁指挥官 - 修真卡牌对战中心</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #8b7355;
+            --secondary-color: #6b5b47;
+            --accent-red: #e94560;
+            --accent-blue: #4cc9f0;
+            --accent-gold: #f5b700;
+            --accent-green: #2ecc71;
+            --dark-bg: #0f1419;
+            --medium-bg: #1a1f2b;
+            --light-bg: #252a36;
+            --text-light: #e6e6e6;
+            --text-dark: #8b8b8b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #16213e 50%, #0f3460 100%);
+            color: var(--text-light);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background: rgba(15, 20, 25, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(139, 115, 85, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .navbar.scrolled {
+            padding: 10px 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 30px;
+        }
+        
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        .nav-links a:hover {
+            color: var(--accent-gold);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-gold);
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .nav-cta {
+            background: var(--accent-red);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* 英雄区域 */
+        .hero {
+            text-align: center;
+            padding: 100px 0 60px;
+            background: radial-gradient(circle at center, rgba(139, 115, 85, 0.1) 0%, transparent 50%);
+        }
+        
+        .hero h1 {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 3.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(245, 183, 0, 0.5);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            opacity: 0.9;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+        
+        /* 功能卡片网格 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(139, 115, 85, 0.3);
+            cursor: pointer;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+        }
+        
+        .feature-title {
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+        }
+        
+        .feature-description {
+            color: var(--text-light);
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .feature-button {
+            display: inline-block;
+            padding: 8px 20px;
+            background: var(--accent-red);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .feature-button:hover {
+            background: #c2334d;
+        }
+        
+        /* 内容区域 */
+        .content-section {
+            display: none;
+            margin: 40px 0;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 2.2rem;
+            color: var(--accent-gold);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--accent-gold);
+        }
+        
+        /* 卡组构筑器样式 */
+        .deck-builder-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(139, 115, 85, 0.3);
+        }
+        
+        .search-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .search-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+        
+        input, select, button {
+            padding: 12px;
+            border: 1px solid var(--accent-blue);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: var(--accent-red);
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #c2334d;
+        }
+        
+        .search-button {
+            align-self: flex-end;
+        }
+        
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(76, 201, 240, 0.3);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .card-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(76, 201, 240, 0.3);
+        }
+        
+        .card-info {
+            padding: 15px;
+        }
+        
+        .card-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #f5f5f5;
+        }
+        
+        .card-type {
+            color: #4cc9f0;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .card-text {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #b8b8b8;
+            max-height: 60px;
+            overflow: hidden;
+        }
+        
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .mana-cost {
+            color: #f5b700;
+        }
+        
+        .add-button {
+            width: 100%;
+            padding: 8px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .add-button:hover {
+            background: #27ae60;
+        }
+        
+        .add-button:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+        }
+        
+        /* 卡组管理区域 */
+        .deck-manager {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            border: 1px solid rgba(139, 115, 85, 0.3);
+        }
+        
+        .deck-tabs {
+            display: flex;
+            border-bottom: 1px solid #4cc9f0;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .deck-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: #b8b8b8;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .deck-tab.active {
+            color: #4cc9f0;
+            border-bottom: 3px solid #4cc9f0;
+        }
+        
+        .deck-tab-count {
+            background: #e94560;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .deck-container {
+            display: none;
+        }
+        
+        .deck-container.active {
+            display: block;
+        }
+        
+        .deck-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .deck-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(76, 201, 240, 0.2);
+        }
+        
+        .deck-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        .deck-card-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .remove-button {
+            padding: 5px 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            flex: 1;
+            margin-right: 5px;
+        }
+        
+        .remove-button:hover {
+            background: #c0392b;
+        }
+        
+        .count-control {
+            display: flex;
+            align-items: center;
+        }
+        
+        .count-button {
+            width: 30px;
+            height: 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .count-display {
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        
+        /* 统计信息 */
+        .stats-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(76, 201, 240, 0.1);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4cc9f0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #b8b8b8;
+        }
+        
+        /* 页脚 */
+        footer {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 40px 0;
+            margin-top: 60px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--accent-gold);
+        }
+        
+        .copyright {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        
+        /* 加载和错误状态 */
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #b8b8b8;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .features-grid, .results-container, .deck-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-section {
+                flex-direction: column;
+            }
+            
+            .deck-tabs {
+                flex-direction: column;
+            }
+            
+            .deck-tab {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-container">
+                <a href="#" class="logo">
+                    <i class="fas fa-yin-yang logo-icon"></i>
+                    道禁指挥官
+                </a>
+                
+                <ul class="nav-links">
+                    <li><a href="#home">首页</a></li>
+                    <li><a href="#deck-builder">卡组构筑器</a></li>
+                    <li><a href="#rules">游戏规则</a></li>
+                    <li><a href="#news">赛事情报</a></li>
+                    <li><a href="#community">社区</a></li>
+                    <li><a href="#" class="nav-cta">开始游戏</a></li>
+                </ul>
+                
+                <div class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主页内容 -->
+    <div class="container">
+        <!-- 英雄区域 -->
+        <section id="home" class="hero">
+            <h1>道禁指挥官</h1>
+            <p>修真卡牌对战游戏 - 战胜对手，夺取道韵，烙印虚空，得证大道</p>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-value">10,000+</div>
+                    <div class="stat-label">活跃修真者</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">500+</div>
+                    <div class="stat-label">道体卡牌</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">50+</div>
+                    <div class="stat-label">每周赛事</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 功能卡片 -->
+        <div class="features-grid">
+            <div class="feature-card" data-section="deck-builder">
+                <div class="feature-icon">
+                    <i class="fas fa-chess-board"></i>
+                </div>
+                <h3 class="feature-title">卡组构筑器</h3>
+                <p class="feature-description">使用强大的卡组构筑工具，创建属于您的修真卡组。集成Scryfall API，实时搜索万智牌卡池。</p>
+                <a href="#deck-builder" class="feature-button">开始构筑</a>
+            </div>
+            
+            <div class="feature-card" data-section="rules">
+                <div class="feature-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h3 class="feature-title">游戏规则</h3>
+                <p class="feature-description">完整的道禁指挥官规则手册，从基础到高级策略，助您快速掌握修真对战精髓。</p>
+                <a href="#rules" class="feature-button">查看规则</a>
+            </div>
+            
+            <div class="feature-card" data-section="news">
+                <div class="feature-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3 class="feature-title">赛事情报</h3>
+                <p class="feature-description">最新赛事消息、竞技卡组战报与构筑情报，助您了解当前修真环境。</p>
+                <a href="#news" class="feature-button">查看情报</a>
+            </div>
+        </div>
+        
+        <!-- 卡组构筑器区域 -->
+        <section id="deck-builder" class="content-section active">
+            <h2 class="section-title">卡组构筑器</h2>
+            
+            <div class="deck-builder-section">
+                <div class="search-section">
+                    <div class="search-group">
+                        <label for="searchInput">卡牌名称/类型/描述</label>
+                        <input type="text" id="searchInput" placeholder="输入搜索词...">
+                    </div>
+                    
+                    <div class="search-group">
+                        <label for="colorFilter">颜色</label>
+                        <select id="colorFilter">
+                            <option value="">所有颜色</option>
+                            <option value="w">白色</option>
+                            <option value="u">蓝色</option>
+                            <option value="b">黑色</option>
+                            <option value="r">红色</option>
+                            <option value="g">绿色</option>
+                            <option value="c">无色</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-group">
+                        <label for="typeFilter">类型</label>
+                        <select id="typeFilter">
+                            <option value="">所有类型</option>
+                            <option value="creature">生物</option>
+                            <option value="planeswalker">鹏洛客</option>
+                            <option value="instant">瞬间</option>
+                            <option value="sorcery">法术</option>
+                            <option value="enchantment">结界</option>
+                            <option value="artifact">神器</option>
+                            <option value="land">地</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-group">
+                        <label for="cmcFilter">法力值</label>
+                        <select id="cmcFilter">
+                            <option value="">任意法力值</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5+</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-group">
+                        <label for="rarityFilter">稀有度</label>
+                        <select id="rarityFilter">
+                            <option value="">所有稀有度</option>
+                            <option value="common">普通</option>
+                            <option value="uncommon">非普通</option>
+                            <option value="rare">稀有</option>
+                            <option value="mythic">秘稀</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-group">
+                        <label>&nbsp;</label>
+                        <button id="searchButton" class="search-button">搜索卡牌</button>
+                    </div>
+                </div>
+                
+                <h3>搜索结果</h3>
+                <div id="resultsContainer" class="results-container">
+                    <div class="empty">请输入搜索条件并点击搜索</div>
+                </div>
+            </div>
+            
+            <!-- 卡组管理 -->
+            <div class="deck-manager">
+                <h3>我的卡组</h3>
+                
+                <div class="deck-tabs">
+                    <div class="deck-tab active" data-tab="overview">概览</div>
+                    <div class="deck-tab" data-tab="commander">道体 <span class="deck-tab-count" id="commanderCount">0</span></div>
+                    <div class="deck-tab" data-tab="equipment">道兵 <span class="deck-tab-count" id="equipmentCount">0</span></div>
+                    <div class="deck-tab" data-tab="spells">道法 <span class="deck-tab-count" id="spellsCount">0</span></div>
+                    <div class="deck-tab" data-tab="resources">资源 <span class="deck-tab-count" id="resourcesCount">0</span></div>
+                </div>
+                
+                <div id="overviewTab" class="deck-container active">
+                    <div class="stats-section">
+                        <h4>卡组统计</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalCards">0</div>
+                                <div class="stat-label">总卡牌数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="avgCmc">0.0</div>
+                                <div class="stat-label">平均法力值</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="colorDistribution">-</div>
+                                <div class="stat-label">颜色分布</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="typeDistribution">-</div>
+                                <div class="stat-label">类型分布</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4>最近添加的卡牌</h4>
+                    <div id="recentCards" class="deck-cards">
+                        <div class="empty">卡组为空，请添加卡牌</div>
+                    </div>
+                </div>
+                
+                <div id="commanderTab" class="deck-container">
+                    <h4>道体 (鹏洛客/传奇生物)</h4>
+                    <div id="commanderCards" class="deck-cards">
+                        <div class="empty">尚未添加道体</div>
+                    </div>
+                </div>
+                
+                <div id="equipmentTab" class="deck-container">
+                    <h4>道兵 (装备/载具)</h4>
+                    <div id="equipmentCards" class="deck-cards">
+                        <div class="empty">尚未添加道兵</div>
+                    </div>
+                </div>
+                
+                <div id="spellsTab" class="deck-container">
+                    <h4>道法 (法术/瞬间/结界)</h4>
+                    <div id="spellsCards" class="deck-cards">
+                        <div class="empty">尚未添加道法</div>
+                    </div>
+                </div>
+                
+                <div id="resourcesTab" class="deck-container">
+                    <h4>资源 (地/神器/其他)</h4>
+                    <div id="resourcesCards" class="deck-cards">
+                        <div class="empty">尚未添加资源</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 游戏规则区域 -->
+        <section id="rules" class="content-section">
+            <h2 class="section-title">游戏规则</h2>
+            <div class="deck-builder-section">
+                <p>道禁指挥官是一种基于万智牌卡池的双人指挥官新赛制，融合了东方修真哲学与策略卡牌游戏。玩家扮演修真者，使用道体、道兵、道法和资源卡牌与对手对决。</p>
+                <p><strong>游戏概念</strong>：战胜对手，夺取道韵，烙印虚空，得证大道</p>
+                
+                <h3>游戏组件</h3>
+                <ul>
+                    <li><strong>道体系统</strong>：鹏洛客或传奇生物，代表玩家的修真本体。生命值=道体法力值+20（≤0时被击杀落败）</li>
+                    <li><strong>道兵装备</strong>：装备或载具卡，分为6个部位。开局道兵视为已佩戴但未激活，需支付法力激活</li>
+                    <li><strong>道法技能</strong>：额外卡组，34张技能卡牌，分为五大流派</li>
+                    <li><strong>资源系统</strong>：主卡组60张，盲牌抽取</li>
+                </ul>
+                
+                <h3>胜利条件</h3>
+                <ol>
+                    <li><strong>击杀道体</strong>：对手道体生命值降至0或以下</li>
+                    <li><strong>资源枯竭</strong>：对手卡组抽空且无法力</li>
+                    <li><strong>主动投降</strong>：对手主动认输</li>
+                </ol>
+                <p><strong>禁止特殊胜利条件</strong>：卡牌上的特殊胜利效果无效</p>
+            </div>
+        </section>
+        
+        <!-- 赛事情报区域 -->
+        <section id="news" class="content-section">
+            <h2 class="section-title">赛事情报</h2>
+            <div class="deck-builder-section">
+                <h3>最新赛事消息</h3>
+                <div class="results-container">
+                    <div class="card">
+                        <div class="card-info">
+                            <div class="card-name">修真大会春季赛</div>
+                            <div class="card-type">2024年5月15日 · 线上赛事</div>
+                            <div class="card-text">春季修真大会即将开启，本次赛事采用双败淘汰制，冠军将获得定制道体卡牌奖励。</div>
+                            <div class="card-stats">
+                                <span class="mana-cost">128人参赛</span>
+                                <span>¥5,000奖金</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-info">
+                            <div class="card-name">道韵争霸赛</div>
+                            <div class="card-type">2024年6月1日 · 上海线下赛</div>
+                            <div class="card-text">首届道韵争霸赛将在上海举行，特邀知名修真者作为嘉宾解说。</div>
+                            <div class="card-stats">
+                                <span class="mana-cost">64人参赛</span>
+                                <span>¥10,000冠军奖金</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>竞技战报</h3>
+                <div class="results-container">
+                    <div class="card">
+                        <div class="card-info">
+                            <div class="card-name">烈焰剑心 vs 玄冰道尊</div>
+                            <div class="card-type">修真杯决赛 · 2024年4月8日</div>
+                            <div class="card-text">一场经典的红蓝对决，烈焰剑心凭借精准的神通连锁在第三回合确立优势。</div>
+                            <div class="card-stats">
+                                <span class="mana-cost">3-1</span>
+                                <span>15回合</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">关于我们</a>
+                <a href="#">联系我们</a>
+                <a href="#">隐私政策</a>
+                <a href="#">使用条款</a>
+            </div>
+            <div class="copyright">
+                &copy; 2024 道禁指挥官. 战胜对手，夺取道韵，烙印虚空，得证大道
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 全局变量
+        let deck = {
+            commander: [], // 道体 (鹏洛客/传奇生物)
+            equipment: [], // 道兵 (装备/载具)
+            spells: [],    // 道法 (法术/瞬间/结界)
+            resources: []  // 资源 (地/神器/其他)
+        };
+        const DECK_KEY = 'dao_commander_deck';
+        
+        // DOM元素
+        const searchInput = document.getElementById('searchInput');
+        const colorFilter = document.getElementById('colorFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const cmcFilter = document.getElementById('cmcFilter');
+        const rarityFilter = document.getElementById('rarityFilter');
+        const searchButton = document.getElementById('searchButton');
+        const resultsContainer = document.getElementById('resultsContainer');
+        
+        // 卡组标签页元素
+        const overviewTab = document.getElementById('overviewTab');
+        const commanderTab = document.getElementById('commanderTab');
+        const equipmentTab = document.getElementById('equipmentTab');
+        const spellsTab = document.getElementById('spellsTab');
+        const resourcesTab = document.getElementById('resourcesTab');
+        
+        // 卡组计数元素
+        const commanderCount = document.getElementById('commanderCount');
+        const equipmentCount = document.getElementById('equipmentCount');
+        const spellsCount = document.getElementById('spellsCount');
+        const resourcesCount = document.getElementById('resourcesCount');
+        
+        // 统计元素
+        const totalCards = document.getElementById('totalCards');
+        const avgCmc = document.getElementById('avgCmc');
+        const colorDistribution = document.getElementById('colorDistribution');
+        const typeDistribution = document.getElementById('typeDistribution');
+        
+        // 卡组容器元素
+        const commanderCards = document.getElementById('commanderCards');
+        const equipmentCards = document.getElementById('equipmentCards');
+        const spellsCards = document.getElementById('spellsCards');
+        const resourcesCards = document.getElementById('resourcesCards');
+        const recentCards = document.getElementById('recentCards');
+        
+        // 初始化：从本地存储加载卡组
+        function init() {
+            const savedDeck = localStorage.getItem(DECK_KEY);
+            if (savedDeck) {
+                deck = JSON.parse(savedDeck);
+                updateDeckDisplay();
+            }
+            
+            // 设置标签页切换事件
+            document.querySelectorAll('.deck-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有活动状态
+                    document.querySelectorAll('.deck-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.deck-container').forEach(c => c.classList.remove('active'));
+                    
+                    // 添加当前活动状态
+                    this.classList.add('active');
+                    document.getElementById(this.getAttribute('data-tab') + 'Tab').classList.add('active');
+                });
+            });
+            
+            // 设置内容区域切换事件
+            document.querySelectorAll('.feature-card, .nav-links a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 移除所有活动状态
+                    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                    
+                    // 添加当前活动状态
+                    const targetId = this.getAttribute('href') || this.getAttribute('data-section');
+                    document.getElementById(targetId).classList.add('active');
+                    
+                    // 平滑滚动到目标区域
+                    window.scrollTo({
+                        top: document.getElementById(targetId).offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+            
+            // 导航栏滚动效果
+            window.addEventListener('scroll', function() {
+                const navbar = document.querySelector('.navbar');
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        }
+        
+        // 搜索卡牌
+        async function searchCards() {
+            const query = searchInput.value.trim();
+            
+            // 如果没有输入搜索词，检查是否有筛选条件
+            const hasFilters = colorFilter.value || typeFilter.value || cmcFilter.value || rarityFilter.value;
+            
+            if (!query && !hasFilters) {
+                resultsContainer.innerHTML = '<div class="error">请输入搜索词或选择筛选条件</div>';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '<div class="loading">搜索中...</div>';
+            
+            try {
+                // 构建搜索查询
+                let searchQuery = query || '';
+                
+                // 添加筛选条件
+                if (colorFilter.value) {
+                    searchQuery += (searchQuery ? ' ' : '') + `c:${colorFilter.value}`;
+                }
+                
+                if (typeFilter.value) {
+                    searchQuery += (searchQuery ? ' ' : '') + `t:${typeFilter.value}`;
+                }
+                
+                if (cmcFilter.value) {
+                    if (cmcFilter.value === '5') {
+                        searchQuery += (searchQuery ? ' ' : '') + 'cmc>=5';
+                    } else {
+                        searchQuery += (searchQuery ? ' ' : '') + `cmc=${cmcFilter.value}`;
+                    }
+                }
+                
+                if (rarityFilter.value) {
+                    searchQuery += (searchQuery ? ' ' : '') + `r:${rarityFilter.value}`;
+                }
+                
+                // 如果没有搜索词但有筛选条件，使用模糊搜索
+                if (!query && hasFilters) {
+                    // 添加一些通用搜索条件，使结果更丰富
+                    if (!typeFilter.value) {
+                        searchQuery += (searchQuery ? ' ' : '') + 't:creature or t:sorcery or t:instant or t:enchantment or t:artifact or t:planeswalker or t:land';
+                    }
+                    
+                    // 限制结果数量，避免返回过多数据
+                    searchQuery += (searchQuery ? ' ' : '') + 'game:paper';
+                }
+                
+                const response = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}`);
+                const data = await response.json();
+                
+                if (data.object === 'error') {
+                    // 如果搜索失败，尝试更简单的搜索
+                    if (hasFilters) {
+                        // 移除部分筛选条件，尝试更简单的搜索
+                        let fallbackQuery = '';
+                        if (colorFilter.value) {
+                            fallbackQuery = `c:${colorFilter.value}`;
+                        }
+                        
+                        if (typeFilter.value) {
+                            fallbackQuery += (fallbackQuery ? ' ' : '') + `t:${typeFilter.value}`;
+                        }
+                        
+                        if (fallbackQuery) {
+                            const fallbackResponse = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(fallbackQuery)}`);
+                            const fallbackData = await fallbackResponse.json();
+                            
+                            if (fallbackData.object === 'list') {
+                                displayResults(fallbackData.data);
+                                return;
+                            }
+                        }
+                    }
+                    
+                    resultsContainer.innerHTML = `<div class="error">${data.details}</div>`;
+                    return;
+                }
+                
+                displayResults(data.data);
+            } catch (error) {
+                console.error('搜索错误:', error);
+                resultsContainer.innerHTML = '<div class="error">搜索失败，请检查网络连接</div>';
+            }
+        }
+        
+        // 显示搜索结果
+        function displayResults(cards) {
+            if (!cards || cards.length === 0) {
+                resultsContainer.innerHTML = '<div class="error">未找到相关卡牌</div>';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '';
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                
+                // 确定卡牌类型
+                const cardType = getCardType(card);
+                
+                cardElement.innerHTML = `
+                    <img src="${card.image_uris ? card.image_uris.normal : 'https://via.placeholder.com/250x350?text=No+Image'}" 
+                         alt="${card.name}" class="card-img">
+                    <div class="card-info">
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-type">${card.type_line}</div>
+                        <div class="card-stats">
+                            <span class="mana-cost">${card.mana_cost || '无费用'}</span>
+                            <span>${card.cmc || 0}费</span>
+                        </div>
+                        <div class="card-text">${card.oracle_text || '无描述'}</div>
+                        <button class="add-button" data-id="${card.id}" data-type="${cardType}">添加到${getTypeName(cardType)}</button>
+                    </div>
+                `;
+                resultsContainer.appendChild(cardElement);
+            });
+            
+            // 添加事件监听器
+            document.querySelectorAll('.add-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const cardId = e.target.getAttribute('data-id');
+                    const cardType = e.target.getAttribute('data-type');
+                    addToDeck(cardId, cardType);
+                });
+            });
+        }
+        
+        // 获取卡牌类型
+        function getCardType(card) {
+            const typeLine = card.type_line.toLowerCase();
+            
+            // 道体：鹏洛客或传奇生物
+            if (typeLine.includes('planeswalker') || (typeLine.includes('creature') && typeLine.includes('legendary'))) {
+                return 'commander';
+            }
+            
+            // 道兵：装备或载具
+            if (typeLine.includes('equipment') || typeLine.includes('vehicle')) {
+                return 'equipment';
+            }
+            
+            // 道法：瞬间、法术或结界
+            if (typeLine.includes('instant') || typeLine.includes('sorcery') || typeLine.includes('enchantment')) {
+                return 'spells';
+            }
+            
+            // 资源：其他卡牌（地、神器、生物等）
+            return 'resources';
+        }
+        
+        // 获取类型名称
+        function getTypeName(type) {
+            const typeNames = {
+                'commander': '道体',
+                'equipment': '道兵',
+                'spells': '道法',
+                'resources': '资源'
+            };
+            return typeNames[type] || '卡组';
+        }
+        
+        // 添加到卡组
+        async function addToDeck(cardId, cardType) {
+            try {
+                const response = await fetch(`https://api.scryfall.com/cards/${cardId}`);
+                const card = await response.json();
+                
+                // 检查卡牌是否已在卡组中
+                const existingIndex = deck[cardType].findIndex(c => c.id === card.id);
+                if (existingIndex >= 0) {
+                    deck[cardType][existingIndex].count += 1;
+                } else {
+                    deck[cardType].push({
+                        id: card.id,
+                        name: card.name,
+                        image: card.image_uris ? card.image_uris.normal : '',
+                        type: card.type_line,
+                        mana_cost: card.mana_cost || '',
+                        cmc: card.cmc || 0,
+                        colors: card.colors || [],
+                        rarity: card.rarity || 'common',
+                        count: 1,
+                        added: new Date().toISOString()
+                    });
+                }
+                
+                saveDeck();
+                updateDeckDisplay();
+            } catch (error) {
+                console.error('添加卡牌错误:', error);
+                alert('添加卡牌失败');
+            }
+        }
+        
+        // 从卡组移除
+        function removeFromDeck(cardId, cardType) {
+            const cardIndex = deck[cardType].findIndex(c => c.id === cardId);
+            if (cardIndex >= 0) {
+                if (deck[cardType][cardIndex].count > 1) {
+                    deck[cardType][cardIndex].count -= 1;
+                } else {
+                    deck[cardType].splice(cardIndex, 1);
+                }
+                saveDeck();
+                updateDeckDisplay();
+            }
+        }
+        
+        // 保存卡组到本地存储
+        function saveDeck() {
+            localStorage.setItem(DECK_KEY, JSON.stringify(deck));
+        }
+        
+        // 更新卡组显示
+        function updateDeckDisplay() {
+            // 更新计数
+            commanderCount.textContent = deck.commander.reduce((sum, card) => sum + card.count, 0);
+            equipmentCount.textContent = deck.equipment.reduce((sum, card) => sum + card.count, 0);
+            spellsCount.textContent = deck.spells.reduce((sum, card) => sum + card.count, 0);
+            resourcesCount.textContent = deck.resources.reduce((sum, card) => sum + card.count, 0);
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 更新各分类卡牌显示
+            updateCardDisplay(commanderCards, deck.commander, 'commander');
+            updateCardDisplay(equipmentCards, deck.equipment, 'equipment');
+            updateCardDisplay(spellsCards, deck.spells, 'spells');
+            updateCardDisplay(resourcesCards, deck.resources, 'resources');
+            
+            // 更新最近添加的卡牌
+            updateRecentCards();
+        }
+        
+        // 更新卡牌显示
+        function updateCardDisplay(container, cards, cardType) {
+            if (cards.length === 0) {
+                container.innerHTML = '<div class="empty">尚未添加' + getTypeName(cardType) + '</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'deck-card';
+                cardElement.innerHTML = `
+                    <img src="${card.image}" alt="${card.name}">
+                    <div class="card-name">${card.name}</div>
+                    <div class="card-type">${card.type}</div>
+                    <div class="card-stats">
+                        <span class="mana-cost">${card.mana_cost || '无费用'}</span>
+                        <span>${card.cmc || 0}费</span>
+                    </div>
+                    <div class="deck-card-controls">
+                        <button class="remove-button" data-id="${card.id}" data-type="${cardType}">移除</button>
+                        <div class="count-control">
+                            <button class="count-button minus" data-id="${card.id}" data-type="${cardType}">-</button>
+                            <span class="count-display">${card.count}</span>
+                            <button class="count-button plus" data-id="${card.id}" data-type="${cardType}">+</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(cardElement);
+            });
+            
+            // 添加事件监听器
+            container.querySelectorAll('.remove-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const cardId = e.target.getAttribute('data-id');
+                    const cardType = e.target.getAttribute('data-type');
+                    removeFromDeck(cardId, cardType);
+                });
+            });
+            
+            container.querySelectorAll('.count-button.plus').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const cardId = e.target.getAttribute('data-id');
+                    const cardType = e.target.getAttribute('data-type');
+                    addToDeck(cardId, cardType);
+                });
+            });
+            
+            container.querySelectorAll('.count-button.minus').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const cardId = e.target.getAttribute('data-id');
+                    const cardType = e.target.getAttribute('data-type');
+                    removeFromDeck(cardId, cardType);
+                });
+            });
+        }
+        
+        // 更新最近添加的卡牌
+        function updateRecentCards() {
+            // 获取所有卡牌并按添加时间排序
+            const allCards = [...deck.commander, ...deck.equipment, ...deck.spells, ...deck.resources];
+            allCards.sort((a, b) => new Date(b.added) - new Date(a.added));
+            
+            const recentCardsList = allCards.slice(0, 6); // 显示最近6张
+            
+            if (recentCardsList.length === 0) {
+                recentCards.innerHTML = '<div class="empty">卡组为空，请添加卡牌</div>';
+                return;
+            }
+            
+            recentCards.innerHTML = '';
+            recentCardsList.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'deck-card';
+                cardElement.innerHTML = `
+                    <img src="${card.image}" alt="${card.name}">
+                    <div class="card-name">${card.name}</div>
+                    <div class="card-type">${card.type}</div>
+                    <div class="card-stats">
+                        <span class="mana-cost">${card.mana_cost || '无费用'}</span>
+                        <span>${card.cmc || 0}费</span>
+                    </div>
+                `;
+                recentCards.appendChild(cardElement);
+            });
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            const allCards = [...deck.commander, ...deck.equipment, ...deck.spells, ...deck.resources];
+            const totalCount = allCards.reduce((sum, card) => sum + card.count, 0);
+            
+            // 总卡牌数
+            totalCards.textContent = totalCount;
+            
+            // 平均法力值
+            const totalCmc = allCards.reduce((sum, card) => sum + (card.cmc * card.count), 0);
+            avgCmc.textContent = totalCount > 0 ? (totalCmc / totalCount).toFixed(1) : '0.0';
+            
+            // 颜色分布
+            const colorCount = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+            allCards.forEach(card => {
+                if (card.colors && card.colors.length > 0) {
+                    card.colors.forEach(color => {
+                        colorCount[color] += card.count;
+                    });
+                } else {
+                    colorCount.C += card.count;
+                }
+            });
+            
+            const colorString = Object.entries(colorCount)
+                .filter(([_, count]) => count > 0)
+                .map(([color, count]) => `${color}:${count}`)
+                .join(' ');
+                
+            colorDistribution.textContent = colorString || '无色';
+            
+            // 类型分布
+            const typeCount = {};
+            allCards.forEach(card => {
+                const types = card.type.split('—')[0].trim().toLowerCase();
+                if (types.includes('creature')) typeCount.creature = (typeCount.creature || 0) + card.count;
+                if (types.includes('instant')) typeCount.instant = (typeCount.instant || 0) + card.count;
+                if (types.includes('sorcery')) typeCount.sorcery = (typeCount.sorcery || 0) + card.count;
+                if (types.includes('enchantment')) typeCount.enchantment = (typeCount.enchantment || 0) + card.count;
+                if (types.includes('artifact')) typeCount.artifact = (typeCount.artifact || 0) + card.count;
+                if (types.includes('land')) typeCount.land = (typeCount.land || 0) + card.count;
+                if (types.includes('planeswalker')) typeCount.planeswalker = (typeCount.planeswalker || 0) + card.count;
+            });
+            
+            const typeString = Object.entries(typeCount)
+                .map(([type, count]) => `${type}:${count}`)
+                .join(' ');
+                
+            typeDistribution.textContent = typeString || '无类型';
+        }
+        
+        // 事件监听器
+        searchButton.addEventListener('click', searchCards);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchCards();
+            }
+        });
+        
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
