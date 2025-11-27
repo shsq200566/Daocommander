@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DaoCommander 道禁指挥官卡组构筑器</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .device-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #4a235a);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 15px;
+            min-height: 800px;
+            padding: 15px;
+        }
+        
+        .left-top-panel {
+            grid-column: 1;
+            grid-row: 1;
+            background: #34495e;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .left-bottom-panel {
+            grid-column: 1;
+            grid-row: 2;
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .right-panel {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            background: #ecf0f1;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-panel-compact {
+            background: #2c3e50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #4a235a;
+        }
+        
+        .filter-tab {
+            background: #34495e;
+            color: #ecf0f1;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .filter-tab.active {
+            background: #2c3e50;
+            color: white;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .filter-tab:hover {
+            background: #3c4b5f;
+        }
+        
+        .filter-content {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .filter-group-compact {
+            margin-bottom: 12px;
+        }
+        
+        .filter-group-compact label {
+            display: block;
+            color: white;
+            font-size: 12px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .filter-group-compact input,
+        .filter-group-compact select {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .color-filters-compact {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .color-buttons-compact {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+        
+        .color-button-compact {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .color-button-compact.selected {
+            border: 3px solid gold;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+        }
+        
+        .color-button-compact.white {
+            background: #f8f5d6;
+            color: #333;
+            background-image: linear-gradient(45deg, #f8f5d6, #fff9e6);
+        }
+        
+        .color-button-compact.blue {
+            background: #aae0fa;
+            color: #003366;
+            background-image: linear-gradient(45deg, #aae0fa, #c2e7ff);
+        }
+        
+        .color-button-compact.black {
+            background: #cbc2bf;
+            color: #000;
+            background-image: linear-gradient(45deg, #cbc2bf, #d8d0cc);
+        }
+        
+        .color-button-compact.red {
+            background: #f9aa8f;
+            color: #8b0000;
+            background-image: linear-gradient(45deg, #f9aa8f, #ffb89a);
+        }
+        
+        .color-button-compact.green {
+            background: #9bd3ae;
+            color: #006400;
+            background-image: linear-gradient(45deg, #9bd3ae, #b0e0c0);
+        }
+        
+        .cmc-filters-compact {
+            margin-bottom: 10px;
+        }
+        
+        .cmc-buttons-compact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            justify-content: center;
+        }
+        
+        .cmc-button-compact {
+            width: 25px;
+            height: 25px;
+            border: none;
+            border-radius: 3px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .cmc-button-compact.selected {
+            background: #e74c3c;
+            transform: scale(1.1);
+            box-shadow: 0 0 5px rgba(231, 76, 60, 0.7);
+        }
+        
+        .search-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .search-btn-compact {
+            flex: 1;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .display-toggle-compact {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .deck-builder-compact {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .deck-sections-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .deck-section-compact {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .deck-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #4a235a;
+        }
+        
+        .deck-section-header h3 {
+            color: white;
+            font-size: 14px;
+        }
+        
+        .deck-cards-compact {
+            min-height: 40px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 5px;
+            border: 1px dashed #4a235a;
+            border-radius: 5px;
+        }
+        
+        .deck-card-compact {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .empty-slot-compact {
+            color: #95a5a6;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+            font-size: 11px;
+        }
+        
+        .spell-subcategories-compact {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .spell-subcategory-compact {
+            background: #2c3e50;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        
+        .spell-subcategory-compact h4 {
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #ecf0f1;
+        }
+        
+        .spell-subcategory-cards-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-height: 20px;
+        }
+        
+        .spell-card-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #34495e;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .spell-card-info-compact {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .spell-card-cmc-compact {
+            background: #2c3e50;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #bdc3c7;
+        }
+        
+        .results-header h2 {
+            color: #2c3e50;
+            font-size: 1.5em;
+        }
+        
+        .card-display-area {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .card-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid #bdc3c7;
+        }
+        
+        .card-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            border-color: #3498db;
+        }
+        
+        .card-item.image-mode {
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .card-image-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            overflow: hidden;
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .card-item.image-mode:hover .card-image {
+            transform: scale(1.05);
+        }
+        
+        .card-image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+        }
+        
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .card-name {
+            font-weight: bold;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .card-type {
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        
+        .card-details {
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            color: #666;
+            flex-wrap: wrap;
+        }
+        
+        .card-detail {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .card-legendary {
+            background: #d4ac0d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .card-rules {
+            font-size: 11px;
+            color: #555;
+            line-height: 1.3;
+            margin-top: 4px;
+            max-height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .card-price {
+            background: #f39c12;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .pagination-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .pagination-info {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .loading, .error {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #fdf2f2;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .simulator-section {
+            background: #16a085;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+        }
+        
+        .simulator-section h4 {
+            color: white;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .hand-cards-compact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 8px 0;
+            min-height: 40px;
+        }
+        
+        .hand-card-compact {
+            background: #1abc9c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+        
+        .simulator-controls-compact {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .simulator-btn-compact {
+            flex: 1;
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            min-width: 60px;
+        }
+        
+        .stats-compact {
+            background: #8e44ad;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 11px;
+        }
+        
+        .remove-card {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        
+        .army-subcategories-compact {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .army-subcategory-compact {
+            background: #2c3e50;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        
+        .army-subcategory-compact h4 {
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #ecf0f1;
+        }
+        
+        .army-subcategory-cards-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-height: 20px;
+        }
+        
+        .army-card-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #34495e;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .army-card-info-compact {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .army-card-cmc-compact {
+            background: #2c3e50;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .selected-card {
+            background: #f39c12;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .army-subcategory-highlight {
+            border: 2px solid #f39c12;
+            background: #34495e;
+        }
+        
+        .resource-subcategories-compact {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .resource-subcategory-compact {
+            background: #2c3e50;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        
+        .resource-subcategory-compact h4 {
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #ecf0f1;
+        }
+        
+        .resource-subcategory-cards-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-height: 20px;
+        }
+        
+        .resource-card-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #34495e;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .resource-card-info-compact {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .resource-card-count {
+            background: #2c3e50;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .card-count {
+            background: #2c3e50;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            min-width: 16px;
+            text-align: center;
+            margin-left: 5px;
+        }
+        
+        /* 电脑端优化样式 */
+        @media (min-width: 1025px) {
+            .container {
+                max-width: 1800px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .main-layout {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto 1fr;
+                gap: 20px;
+                padding: 20px;
+                min-height: 700px;
+            }
+            
+            .left-top-panel {
+                padding: 20px;
+            }
+            
+            .left-bottom-panel {
+                padding: 20px;
+            }
+            
+            .right-panel {
+                padding: 20px;
+            }
+            
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 20px;
+            }
+            
+            .card-item {
+                padding: 15px;
+            }
+            
+            .card-name {
+                font-size: 16px;
+            }
+            
+            .card-details {
+                font-size: 13px;
+                gap: 12px;
+            }
+        }
+        
+        /* 平板端样式 */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+            
+            .left-top-panel {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            
+            .left-bottom-panel {
+                grid-column: 1;
+                grid-row: 2;
+            }
+            
+            .right-panel {
+                grid-column: 1;
+                grid-row: 3;
+            }
+            
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 15px;
+            }
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+            
+            .left-top-panel {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            
+            .left-bottom-panel {
+                grid-column: 1;
+                grid-row: 2;
+            }
+            
+            .right-panel {
+                grid-column: 1;
+                grid-row: 3;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .simulator-controls-compact {
+                flex-direction: column;
+            }
+            
+            .army-subcategories-compact {
+                grid-template-columns: 1fr;
+            }
+            
+            .resource-subcategories-compact {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="device-indicator">
+            {{ deviceType }} 设备 - {{ screenWidth }}px
+        </div>
+        
+        <div class="container">
+            <div class="header">
+                <h1>DaoCommander 道禁指挥官卡组构筑器</h1>
+                <p>基于官方万智牌的卡池数据（感谢Scryfall分享的API数据接口服务）</p>
+            </div>
+            
+            <div class="main-layout">
+                <!-- 左上侧：筛选功能 -->
+                <div class="left-top-panel">
+                    <div class="filter-panel-compact">
+                        <div class="filter-tabs">
+                            <button class="filter-tab" 
+                                    :class="{ active: activeFilterTab === 'basic' }"
+                                    @click="activeFilterTab = 'basic'">
+                                基本筛选
+                            </button>
+                            <button class="filter-tab" 
+                                    :class="{ active: activeFilterTab === 'advanced' }"
+                                    @click="activeFilterTab = 'advanced'">
+                                高级筛选
+                            </button>
+                            <button class="filter-tab" 
+                                    :class="{ active: activeFilterTab === 'colors' }"
+                                    @click="activeFilterTab = 'colors'">
+                                颜色筛选
+                            </button>
+                        </div>
+                        
+                        <div class="filter-content">
+                            <!-- 基本筛选 -->
+                            <div v-if="activeFilterTab === 'basic'" class="filter-tab-content">
+                                <div class="filter-group-compact">
+                                    <label>卡牌名称</label>
+                                    <input type="text" v-model="searchQuery" placeholder="输入卡牌名称..." 
+                                           @keyup.enter="searchCards">
+                                </div>
+                                
+                                <div class="filter-group-compact">
+                                    <label>卡牌类型</label>
+                                    <select v-model="selectedType">
+                                        <option value="">所有类型</option>
+                                        <option value="creature">生物</option>
+                                        <option value="sorcery">法术</option>
+                                        <option value="instant">瞬间</option>
+                                        <option value="artifact">神器</option>
+                                        <option value="enchantment">结界</option>
+                                        <option value="land">地</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group-compact">
+                                    <label>稀有度</label>
+                                    <select v-model="selectedRarity">
+                                        <option value="">所有稀有度</option>
+                                        <option value="common">普通</option>
+                                        <option value="uncommon">非普通</option>
+                                        <option value="rare">稀有</option>
+                                        <option value="mythic">秘稀</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 高级筛选 -->
+                            <div v-if="activeFilterTab === 'advanced'" class="filter-tab-content">
+                                <div class="filter-group-compact">
+                                    <label>价格范围 (USD)</label>
+                                    <div style="display: flex; gap: 5px;">
+                                        <input type="number" v-model="minPrice" placeholder="最低" style="flex: 1;">
+                                        <span style="color: white; line-height: 30px;">-</span>
+                                        <input type="number" v-model="maxPrice" placeholder="最高" style="flex: 1;">
+                                    </div>
+                                </div>
+                                
+                                <div class="cmc-filters-compact">
+                                    <label>法术力费用</label>
+                                    <div class="cmc-buttons-compact">
+                                        <button v-for="n in 13" :key="n-1" 
+                                                class="cmc-button-compact" 
+                                                :class="{ selected: selectedCmcs.includes(n-1) }"
+                                                @click="toggleCmc(n-1)">
+                                            {{ n-1 }}
+                                        </button>
+                                        <button class="cmc-button-compact" 
+                                                :class="{ selected: selectedCmcs.includes(12) }"
+                                                @click="toggleCmc(12)">
+                                            12+
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="filter-group-compact">
+                                    <label>规则文本</label>
+                                    <input type="text" v-model="rulesText" placeholder="搜索规则文本...">
+                                </div>
+                            </div>
+                            
+                            <!-- 颜色筛选 -->
+                            <div v-if="activeFilterTab === 'colors'" class="filter-tab-content">
+                                <div class="color-filters-compact">
+                                    <div>
+                                        <label>选择颜色</label>
+                                        <div class="color-buttons-compact">
+                                            <button class="color-button-compact white" 
+                                                    :class="{ selected: selectedColors.includes('W') }"
+                                                    @click="toggleColor('W')" title="白色">
+                                                白
+                                            </button>
+                                            <button class="color-button-compact blue" 
+                                                    :class="{ selected: selectedColors.includes('U') }"
+                                                    @click="toggleColor('U')" title="蓝色">
+                                                蓝
+                                            </button>
+                                            <button class="color-button-compact black" 
+                                                    :class="{ selected: selectedColors.includes('B') }"
+                                                    @click="toggleColor('B')" title="黑色">
+                                                黑
+                                            </button>
+                                            <button class="color-button-compact red" 
+                                                    :class="{ selected: selectedColors.includes('R') }"
+                                                    @click="toggleColor('R')" title="红色">
+                                                红
+                                            </button>
+                                            <button class="color-button-compact green" 
+                                                    :class="{ selected: selectedColors.includes('G') }"
+                                                    @click="toggleColor('G')" title="绿色">
+                                                绿
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label>颜色模式</label>
+                                        <select v-model="colorMode" style="width: 100%; margin-top: 5px;">
+                                            <option value="any">部分匹配</option>
+                                            <option value="exact">必须多色</option>
+                                            <option value="exclude">不含未选</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="filter-group-compact">
+                                    <label>传奇筛选</label>
+                                    <select v-model="selectedLegendary">
+                                        <option value="">所有卡牌</option>
+                                        <option value="legendary">传奇卡牌</option>
+                                        <option value="nonlegendary">非传奇卡牌</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="search-controls">
+                            <button class="search-btn-compact" @click="searchCards" :disabled="loading">
+                                {{ loading ? '搜索中...' : '搜索' }}
+                            </button>
+                            <button class="display-toggle-compact" @click="toggleDisplayMode">
+                                {{ displayMode === 'text' ? '图片' : '文本' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 左下侧：卡组构建器 -->
+                <div class="left-bottom-panel">
+                    <div class="deck-builder-compact">
+                        <div class="deck-sections-container">
+                            <div class="deck-section-compact">
+                                <div class="deck-section-header">
+                                    <h3>道体</h3>
+                                    <span style="color: #ecf0f1; font-size: 12px;">{{ deck.commander.length }}/1</span>
+                                </div>
+                                <div class="deck-cards-compact">
+                                    <div class="deck-card-compact" v-for="(card, index) in deck.commander" :key="index">
+                                        {{ card.name }}
+                                        <button class="remove-card" @click="removeCard('commander', index)">×</button>
+                                    </div>
+                                    <div class="empty-slot-compact" v-if="deck.commander.length === 0">
+                                        点击卡牌添加道体
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="deck-section-compact">
+                                <div class="deck-section-header">
+                                    <h3>道兵</h3>
+                                    <span style="color: #ecf0f1; font-size: 12px;">{{ totalArmyCount }}/5</span>
+                                </div>
+                                <div class="selected-card" v-if="selectedArmyCard">
+                                    已选择: {{ selectedArmyCard.name }}
+                                    <button @click="clearSelectedArmyCard" style="background: none; border: none; color: white; margin-left: 10px; cursor: pointer;">取消</button>
+                                </div>
+                                <div class="army-subcategories-compact">
+                                    <div class="army-subcategory-compact" 
+                                         v-for="(subcat, name) in armySubcategories" 
+                                         :key="name"
+                                         :class="{ 'army-subcategory-highlight': selectedArmyCard }"
+                                         @click="addToArmySubcategory(name)">
+                                        <h4>{{ subcat.label }} {{ deck.army[name].length }}</h4>
+                                        <div class="army-subcategory-cards-compact">
+                                            <div class="army-card-compact" v-for="(card, index) in deck.army[name]" :key="card.id + index">
+                                                <div class="army-card-info-compact">
+                                                    <span class="army-card-cmc-compact">{{ card.cmc || 0 }}</span>
+                                                    <span>{{ card.name }}</span>
+                                                </div>
+                                                <button class="remove-card" @click="removeArmyCard(name, index)">×</button>
+                                            </div>
+                                        </div>
+                                        <button class="army-subcategory-add" v-if="selectedArmyCard">
+                                            点击添加 {{ selectedArmyCard.name }} 到 {{ subcat.label }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="deck-section-compact">
+                                <div class="deck-section-header">
+                                    <h3>道法</h3>
+                                    <span style="color: #ecf0f1; font-size: 12px;">{{ totalSpellsCount }}/34</span>
+                                </div>
+                                <div class="spell-subcategories-compact">
+                                    <div class="spell-subcategory-compact" v-for="(subcat, name) in spellSubcategories" :key="name">
+                                        <h4>{{ subcat.label }} {{ deck.spells[name].length }}</h4>
+                                        <div class="spell-subcategory-cards-compact">
+                                            <div class="spell-card-compact" v-for="(card, index) in deck.spells[name]" :key="card.id + index">
+                                                <div class="spell-card-info-compact">
+                                                    <span class="spell-card-cmc-compact">{{ card.cmc || 0 }}</span>
+                                                    <span>{{ card.name }}</span>
+                                                </div>
+                                                <button class="remove-card" @click="removeSpell(name, index)">×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="deck-section-compact">
+                                <div class="deck-section-header">
+                                    <h3>资源卡</h3>
+                                    <span style="color: #ecf0f1; font-size: 12px;">{{ totalResourcesCount }}/60</span>
+                                </div>
+                                <div class="resource-subcategories-compact">
+                                    <div class="resource-subcategory-compact">
+                                        <h4>地牌 {{ landsCount }}</h4>
+                                        <div class="resource-subcategory-cards-compact">
+                                            <div class="resource-card-compact" v-for="(item, index) in groupedLands" :key="item.id">
+                                                <div class="resource-card-info-compact">
+                                                    <span class="resource-card-count">{{ item.count }}</span>
+                                                    <span>{{ item.name }}</span>
+                                                </div>
+                                                <button class="remove-card" @click="removeResourceCard('lands', index, item.id)">×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="resource-subcategory-compact">
+                                        <h4>其他资源 {{ otherResourcesCount }}</h4>
+                                        <div class="resource-subcategory-cards-compact">
+                                            <div class="resource-card-compact" v-for="(item, index) in groupedOtherResources" :key="item.id">
+                                                <div class="resource-card-info-compact">
+                                                    <span class="resource-card-count">{{ item.count }}</span>
+                                                    <span>{{ item.name }}</span>
+                                                </div>
+                                                <button class="remove-card" @click="removeResourceCard('otherResources', index, item.id)">×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="simulator-section">
+                            <h4>模拟对战</h4>
+                            <div class="hand-cards-compact">
+                                <div class="hand-card-compact" v-for="(card, index) in hand" :key="index">
+                                    {{ card.name }}
+                                </div>
+                                <div v-if="hand.length === 0" style="color: #bdc3c7; font-size: 10px; text-align: center; width: 100%;">
+                                    手牌为空
+                                </div>
+                            </div>
+                            <div class="simulator-controls-compact">
+                                <button class="simulator-btn-compact" @click="drawCard">抽牌</button>
+                                <button class="simulator-btn-compact" @click="shuffleLibrary">洗牌</button>
+                                <button class="simulator-btn-compact" @click="resetGame">重置</button>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-compact">
+                            卡组总数: {{ totalDeckCount }}/100
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧：卡牌筛选结果 -->
+                <div class="right-panel">
+                    <div class="results-header">
+                        <h2>卡牌搜索结果 ({{ filteredCards.length }} 张)</h2>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" @click="prevPage" :disabled="currentPage === 1">上一页</button>
+                            <span class="pagination-info">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+                            <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-display-area">
+                        <div class="loading" v-if="loading">
+                            正在从Scryfall API加载数据...
+                        </div>
+                        
+                        <div class="error" v-if="error">
+                            {{ error }}
+                        </div>
+                        
+                        <div v-if="!loading && !error">
+                            <div class="card-grid">
+                                <div class="card-item" 
+                                     :class="{ 'image-mode': displayMode === 'image' }"
+                                     v-for="card in paginatedCards" 
+                                     :key="card.id" 
+                                     @click="addToDeck(card)">
+                                    
+                                    <div v-if="displayMode === 'image'" class="card-image-container">
+                                        <img v-if="card.image_uris && card.image_uris.normal" 
+                                             :src="card.image_uris.normal" 
+                                             :alt="card.name"
+                                             class="card-image"
+                                             @error="handleImageError">
+                                        <div v-else class="card-image-placeholder">
+                                            {{ card.name }}
+                                        </div>
+                                        <div class="card-image-overlay">
+                                            <div class="card-name">{{ card.name }}</div>
+                                            <div class="card-type">{{ card.type_line }}</div>
+                                            <div class="card-price" v-if="card.prices && card.prices.usd">
+                                                ${{ card.prices.usd }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-else class="card-info">
+                                        <div class="card-name">{{ card.name }}</div>
+                                        <div class="card-type">{{ card.type_line }}</div>
+                                        <div class="card-details">
+                                            <span class="card-detail">费用: {{ card.cmc || 0 }}</span>
+                                            <span class="card-detail" v-if="card.mana_cost">{{ card.mana_cost }}</span>
+                                            <span class="card-detail" v-if="card.rarity">稀有度: {{ getRarityName(card.rarity) }}</span>
+                                            <span class="card-legendary" v-if="isLegendary(card)">传奇</span>
+                                            <span class="card-detail" v-if="card.power !== undefined">力量: {{ card.power }}</span>
+                                            <span class="card-detail" v-if="card.toughness !== undefined">防御: {{ card.toughness }}</span>
+                                        </div>
+                                        <div class="card-rules" v-if="card.oracle_text">
+                                            {{ card.oracle_text.substring(0, 100) }}{{ card.oracle_text.length > 100 ? '...' : '' }}
+                                        </div>
+                                        <div class="card-price" v-if="card.prices && card.prices.usd">
+                                            ${{ card.prices.usd }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    searchQuery: '',
+                    selectedType: '',
+                    selectedRarity: '',
+                    selectedLegendary: '',
+                    selectedColors: [],
+                    selectedCmcs: [],
+                    colorMode: 'any',
+                    minPrice: '',
+                    maxPrice: '',
+                    rulesText: '',
+                    cards: [],
+                    loading: false,
+                    error: null,
+                    displayMode: 'image',
+                    activeFilterTab: 'basic',
+                    deck: {
+                        commander: [],
+                        spells: {
+                            sorcery: [],
+                            instant: [],
+                            enchantment: [],
+                            creature: [],
+                            artifact_creature: []
+                        },
+                        army: {
+                            dou: [],
+                            jia: [],
+                            zu: [],
+                            bing: [],
+                            fu: [],
+                            ju: []
+                        },
+                        lands: [],
+                        otherResources: []
+                    },
+                    hand: [],
+                    library: [],
+                    selectedArmyCard: null,
+                    currentPage: 1,
+                    cardsPerPage: 12,
+                    screenWidth: window.innerWidth,
+                    deviceType: '电脑',
+                    armySubcategories: {
+                        dou: { label: '兜' },
+                        jia: { label: '甲' },
+                        zu: { label: '足' },
+                        bing: { label: '兵' },
+                        fu: { label: '符' },
+                        ju: { label: '具' }
+                    },
+                    spellSubcategories: {
+                        sorcery: { label: '法术' },
+                        instant: { label: '瞬间' },
+                        enchantment: { label: '结界' },
+                        creature: { label: '生物' },
+                        artifact_creature: { label: '神器生物' }
+                    }
+                }
+            },
+            computed: {
+                filteredCards() {
+                    return this.cards.filter(card => {
+                        if (this.minPrice !== '' || this.maxPrice !== '') {
+                            const price = parseFloat(card.prices?.usd || 0);
+                            const min = this.minPrice !== '' ? parseFloat(this.minPrice) : 0;
+                            const max = this.maxPrice !== '' ? parseFloat(this.maxPrice) : Infinity;
+                            
+                            if (price < min || price > max) {
+                                return false;
+                            }
+                        }
+                        
+                        if (this.selectedRarity && card.rarity !== this.selectedRarity) {
+                            return false;
+                        }
+                        
+                        if (this.selectedLegendary) {
+                            const isLegendary = this.isLegendary(card);
+                            if (this.selectedLegendary === 'legendary' && !isLegendary) {
+                                return false;
+                            }
+                            if (this.selectedLegendary === 'nonlegendary' && isLegendary) {
+                                return false;
+                            }
+                        }
+                        
+                        if (this.selectedCmcs.length > 0) {
+                            const cmc = parseFloat(card.cmc || 0);
+                            const cmcToCheck = cmc > 12 ? 12 : cmc;
+                            if (!this.selectedCmcs.includes(cmcToCheck)) {
+                                return false;
+                            }
+                        }
+                        
+                        if (this.rulesText && (!card.oracle_text || 
+                            !card.oracle_text.toLowerCase().includes(this.rulesText.toLowerCase()))) {
+                            return false;
+                        }
+                        
+                        if (this.selectedColors.length > 0) {
+                            const cardColors = card.colors || [];
+                            
+                            if (this.colorMode === 'exact') {
+                                if (this.selectedColors.length !== cardColors.length) {
+                                    return false;
+                                }
+                                return this.selectedColors.every(color => cardColors.includes(color));
+                            } else if (this.colorMode === 'exclude') {
+                                return cardColors.every(color => this.selectedColors.includes(color));
+                            } else {
+                                return this.selectedColors.some(color => cardColors.includes(color));
+                            }
+                        }
+                        
+                        return true;
+                    });
+                },
+                paginatedCards() {
+                    const start = (this.currentPage - 1) * this.cardsPerPage;
+                    const end = start + this.cardsPerPage;
+                    return this.filteredCards.slice(start, end);
+                },
+                totalPages() {
+                    return Math.ceil(this.filteredCards.length / this.cardsPerPage);
+                },
+                totalDeckCount() {
+                    return this.deck.commander.length + this.totalSpellsCount + this.totalArmyCount + this.totalResourcesCount;
+                },
+                totalSpellsCount() {
+                    return this.deck.spells.sorcery.length + 
+                           this.deck.spells.instant.length + 
+                           this.deck.spells.enchantment.length + 
+                           this.deck.spells.creature.length + 
+                           this.deck.spells.artifact_creature.length;
+                },
+                totalArmyCount() {
+                    return Object.values(this.deck.army).reduce((sum, arr) => sum + arr.length, 0);
+                },
+                totalResourcesCount() {
+                    return this.deck.lands.length + this.deck.otherResources.length;
+                },
+                landsCount() {
+                    return this.deck.lands.length;
+                },
+                otherResourcesCount() {
+                    return this.deck.otherResources.length;
+                },
+                groupedLands() {
+                    const grouped = {};
+                    this.deck.lands.forEach(card => {
+                        if (!grouped[card.id]) {
+                            grouped[card.id] = {
+                                id: card.id,
+                                name: card.name,
+                                cmc: card.cmc || 0,
+                                count: 0
+                            };
+                        }
+                        grouped[card.id].count++;
+                    });
+                    
+                    return Object.values(grouped)
+                        .sort((a, b) => a.cmc - b.cmc)
+                        .map(item => ({
+                            ...item,
+                            name: `${item.name}×${item.count}`
+                        }));
+                },
+                groupedOtherResources() {
+                    const grouped = {};
+                    this.deck.otherResources.forEach(card => {
+                        if (!grouped[card.id]) {
+                            grouped[card.id] = {
+                                id: card.id,
+                                name: card.name,
+                                cmc: card.cmc || 0,
+                                count: 0
+                            };
+                        }
+                        grouped[card.id].count++;
+                    });
+                    
+                    return Object.values(grouped)
+                        .sort((a, b) => a.cmc - b.cmc)
+                        .map(item => ({
+                            ...item,
+                            name: `${item.name}×${item.count}`
+                        }));
+                }
+            },
+            methods: {
+                async searchCards() {
+                    this.loading = true;
+                    this.error = null;
+                    this.currentPage = 1;
+                    
+                    try {
+                        let query = '';
+                        
+                        if (this.searchQuery) {
+                            query += this.searchQuery + ' ';
+                        }
+                        
+                        if (this.selectedType) {
+                            query += `t:${this.selectedType} `;
+                        }
+                        
+                        if (this.selectedRarity) {
+                            query += `r:${this.selectedRarity} `;
+                        }
+                        
+                        if (this.selectedLegendary === 'legendary') {
+                            query += 't:legendary ';
+                        } else if (this.selectedLegendary === 'nonlegendary') {
+                            query += '-t:legendary ';
+                        }
+                        
+                        if (this.selectedColors.length > 0) {
+                            const colors = this.selectedColors.join('');
+                            if (colors) {
+                                if (this.colorMode === 'exact') {
+                                    query += `c:${colors} `;
+                                } else if (this.colorMode === 'exclude') {
+                                    query += `c=${colors} `;
+                                } else {
+                                    query += `c:${colors} `;
+                                }
+                            }
+                        }
+                        
+                        if (this.minPrice !== '' || this.maxPrice !== '') {
+                            const min = this.minPrice || '0';
+                            const max = this.maxPrice || '';
+                            query += `usd>=${min} `;
+                            if (max) {
+                                query += `usd<=${max} `;
+                            }
+                        }
+                        
+                        if (this.rulesText) {
+                            query += `o:"${this.rulesText}" `;
+                        }
+                        
+                        const apiUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query.trim())}&unique=cards&order=released&dir=desc`;
+                        
+                        const response = await fetch(apiUrl);
+                        
+                        if (!response.ok) {
+                            throw new Error('搜索失败，请检查搜索条件');
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.object === 'error') {
+                            throw new Error(data.details);
+                        }
+                        
+                        this.cards = data.data || [];
+                        
+                    } catch (error) {
+                        this.error = error.message;
+                        this.cards = [];
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                isLegendary(card) {
+                    return card.type_line && card.type_line.includes('Legendary');
+                },
+                
+                isBasicLand(card) {
+                    return card.type_line && card.type_line.includes('Basic Land');
+                },
+                
+                isLand(card) {
+                    return card.type_line && card.type_line.includes('Land');
+                },
+                
+                isArmyCard(card) {
+                    const typeLine = card.type_line || '';
+                    return typeLine.includes('Equipment') || typeLine.includes('Vehicle') || typeLine.includes('Spacecraft');
+                },
+                
+                getRarityName(rarity) {
+                    const rarityMap = {
+                        'common': '普通',
+                        'uncommon': '非普通',
+                        'rare': '稀有',
+                        'mythic': '秘稀'
+                    };
+                    return rarityMap[rarity] || rarity;
+                },
+                
+                toggleColor(color) {
+                    const index = this.selectedColors.indexOf(color);
+                    if (index > -1) {
+                        this.selectedColors.splice(index, 1);
+                    } else {
+                        this.selectedColors.push(color);
+                        this.selectedColors.sort();
+                    }
+                },
+                
+                toggleCmc(cmc) {
+                    const index = this.selectedCmcs.indexOf(cmc);
+                    if (index > -1) {
+                        this.selectedCmcs.splice(index, 1);
+                    } else {
+                        this.selectedCmcs.push(cmc);
+                        this.selectedCmcs.sort((a, b) => a - b);
+                    }
+                },
+                
+                toggleDisplayMode() {
+                    this.displayMode = this.displayMode === 'text' ? 'image' : 'text';
+                },
+                
+                handleImageError(event) {
+                    event.target.style.display = 'none';
+                    const placeholder = event.target.parentElement.querySelector('.card-image-placeholder');
+                    if (placeholder) {
+                        placeholder.style.display = 'flex';
+                    }
+                },
+                
+                addToDeck(card) {
+                    let category = 'spells';
+                    let subcategory = 'sorcery';
+                    
+                    const isLegendary = this.isLegendary(card);
+                    const typeLine = card.type_line || '';
+                    const isArmy = this.isArmyCard(card);
+                    const isLand = this.isLand(card);
+                    
+                    if (isLegendary && (typeLine.includes('Creature') || typeLine.includes('Planeswalker'))) {
+                        category = 'commander';
+                    }
+                    else if (isArmy) {
+                        this.selectedArmyCard = {...card};
+                        return;
+                    }
+                    else if (isLand) {
+                        category = 'resources';
+                    }
+                    else {
+                        category = 'spells';
+                        if (typeLine.includes('Sorcery')) {
+                            subcategory = 'sorcery';
+                        } else if (typeLine.includes('Instant')) {
+                            subcategory = 'instant';
+                        } else if (typeLine.includes('Enchantment')) {
+                            subcategory = 'enchantment';
+                        } else if (typeLine.includes('Creature')) {
+                            subcategory = 'creature';
+                        } else if (typeLine.includes('Artifact') && typeLine.includes('Creature')) {
+                            subcategory = 'artifact_creature';
+                        }
+                    }
+                    
+                    const maxCounts = {
+                        commander: 1,
+                        spells: 34,
+                        army: 5,
+                        resources: 60
+                    };
+                    
+                    if (category === 'spells') {
+                        if (this.totalSpellsCount < maxCounts.spells) {
+                            this.addToSpells(card, subcategory);
+                        } else {
+                            alert('已达到道法的最大数量限制！');
+                        }
+                    } else if (category === 'army') {
+                        this.selectedArmyCard = {...card};
+                    } else if (category === 'resources') {
+                        if (this.totalResourcesCount < maxCounts.resources) {
+                            this.addToResources(card);
+                        } else {
+                            alert('已达到资源卡的最大数量限制！');
+                        }
+                    } else {
+                        if (this.deck[category].length < maxCounts[category]) {
+                            this.addToCategory(card, category);
+                        } else {
+                            alert(`已达到${this.getCategoryName(category)}的最大数量限制！`);
+                        }
+                    }
+                },
+                
+                addToCategory(card, category) {
+                    const isAlreadyInDeck = this.isCardInDeck(card);
+                    
+                    if (!isAlreadyInDeck) {
+                        this.deck[category].push({...card});
+                        this.updateLibrary();
+                    } else {
+                        alert('此卡牌已在卡组中！');
+                    }
+                },
+                
+                addToSpells(card, subcategory) {
+                    const isAlreadyInDeck = this.isCardInDeck(card);
+                    
+                    if (isAlreadyInDeck) {
+                        alert('此卡牌已在卡组中！');
+                        return;
+                    }
+                    
+                    const cmc = card.cmc || 0;
+                    const hasSameCmc = this.deck.spells[subcategory].some(deckCard => (deckCard.cmc || 0) === cmc);
+                    
+                    if (hasSameCmc) {
+                        alert(`在${this.getSubcategoryName(subcategory)}中，已存在费用为${cmc}的卡牌！`);
+                        return;
+                    }
+                    
+                    this.deck.spells[subcategory].push({...card});
+                    this.updateLibrary();
+                },
+                
+                addToResources(card) {
+                    const isLand = this.isLand(card);
+                    const isBasicLand = this.isBasicLand(card);
+                    
+                    if (isLand) {
+                        if (isBasicLand) {
+                            this.deck.lands.push({...card});
+                        } else {
+                            const isAlreadyInDeck = this.isCardInDeck(card);
+                            if (!isAlreadyInDeck) {
+                                this.deck.lands.push({...card});
+                            } else {
+                                alert('此地牌已在卡组中！');
+                                return;
+                            }
+                        }
+                    } else {
+                        const isAlreadyInDeck = this.isCardInDeck(card);
+                        if (!isAlreadyInDeck) {
+                            this.deck.otherResources.push({...card});
+                        } else {
+                            alert('此资源卡已在卡组中！');
+                            return;
+                        }
+                    }
+                    
+                    this.updateLibrary();
+                },
+                
+                addToArmySubcategory(subcategory) {
+                    if (!this.selectedArmyCard) {
+                        return;
+                    }
+                    
+                    if (this.totalArmyCount >= 5) {
+                        alert('道兵分栏已达到最大数量限制！');
+                        this.clearSelectedArmyCard();
+                        return;
+                    }
+                    
+                    const isAlreadyInDeck = this.isCardInDeck(this.selectedArmyCard);
+                    
+                    if (isAlreadyInDeck) {
+                        alert('此卡牌已在卡组中！');
+                        this.clearSelectedArmyCard();
+                        return;
+                    }
+                    
+                    this.deck.army[subcategory].push({...this.selectedArmyCard});
+                    this.updateLibrary();
+                    this.clearSelectedArmyCard();
+                },
+                
+                isCardInDeck(card) {
+                    return Object.values(this.deck)
+                        .flatMap(val => {
+                            if (Array.isArray(val)) {
+                                return val;
+                            } else if (typeof val === 'object') {
+                                return Object.values(val).flat();
+                            }
+                            return [];
+                        })
+                        .some(deckCard => deckCard.id === card.id);
+                },
+                
+                getCategoryName(category) {
+                    const names = {
+                        commander: '道体',
+                        spells: '道法',
+                        army: '道兵',
+                        resources: '资源卡'
+                    };
+                    return names[category] || category;
+                },
+                
+                getSubcategoryName(subcategory) {
+                    const names = {
+                        sorcery: '法术',
+                        instant: '瞬间',
+                        enchantment: '结界',
+                        creature: '生物'
+                    };
+                    return names[subcategory] || subcategory;
+                },
+                
+                removeCard(category, index) {
+                    this.deck[category].splice(index, 1);
+                    this.updateLibrary();
+                },
+                
+                removeSpell(subcategory, index) {
+                    this.deck.spells[subcategory].splice(index, 1);
+                    this.updateLibrary();
+                },
+                
+                removeArmyCard(subcategory, index) {
+                    this.deck.army[subcategory].splice(index, 1);
+                    this.updateLibrary();
+                },
+                
+                removeResourceCard(category, index, cardId) {
+                    if (category === 'lands') {
+                        const cardIndex = this.deck.lands.findIndex(card => card.id === cardId);
+                        if (cardIndex > -1) {
+                            this.deck.lands.splice(cardIndex, 1);
+                        }
+                    } else {
+                        const cardIndex = this.deck.otherResources.findIndex(card => card.id === cardId);
+                        if (cardIndex > -1) {
+                            this.deck.otherResources.splice(cardIndex, 1);
+                        }
+                    }
+                    this.updateLibrary();
+                },
+                
+                clearSelectedArmyCard() {
+                    this.selectedArmyCard = null;
+                },
+                
+                updateLibrary() {
+                    this.library = [...this.deck.lands, ...this.deck.otherResources];
+                    this.shuffleLibrary();
+                },
+                
+                shuffleLibrary() {
+                    for (let i = this.library.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [this.library[i], this.library[j]] = [this.library[j], this.library[i]];
+                    }
+                },
+                
+                drawCard() {
+                    if (this.library.length > 0) {
+                        const drawnCard = this.library.pop();
+                        this.hand.push(drawnCard);
+                    } else {
+                        alert('牌库已空！');
+                    }
+                },
+                
+                resetGame() {
+                    this.hand = [];
+                    this.updateLibrary();
+                },
+                
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                    }
+                },
+                
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                },
+                
+                updateScreenInfo() {
+                    this.screenWidth = window.innerWidth;
+                    this.deviceType = this.screenWidth >= 1025 ? '电脑' : 
+                                     this.screenWidth >= 769 ? '平板' : '移动端';
+                }
+            },
+            mounted() {
+                this.updateScreenInfo();
+                window.addEventListener('resize', this.updateScreenInfo);
+                
+                this.searchQuery = 'island';
+                this.searchCards();
+            },
+            beforeUnmount() {
+                window.removeEventListener('resize', this.updateScreenInfo);
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
